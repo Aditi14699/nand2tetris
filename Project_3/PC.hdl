@@ -1,0 +1,30 @@
+/**
+ * A 16-bit counter.
+ * if      reset(t): out(t+1) = 0
+ * else if load(t):  out(t+1) = in(t)
+ * else if inc(t):   out(t+1) = out(t) + 1
+ * else              out(t+1) = out(t)
+ */
+CHIP PC {
+    IN in[16], reset, load, inc;
+    OUT out[16];
+    
+    PARTS:
+    // Internal register to store PC value
+    Register(in=finalValue, load=true, out=pcOut);
+
+    // Increment the current PC value by 1
+    Inc16(in=pcOut, out=incremented);
+
+    // Select between incremented value or current value based on 'inc'
+    Mux16(a=pcOut, b=incremented, sel=inc, out=nextValue);
+
+    // Select between new input value or previous value based on 'load'
+    Mux16(a=nextValue, b=in, sel=load, out=loadedValue);
+
+    // Select between loaded value or 0 based on 'reset'
+    Mux16(a=loadedValue, b=false, sel=reset, out=finalValue);
+
+    // Store final value in Register
+    Register(in=finalValue, load=true, out=out);
+}
